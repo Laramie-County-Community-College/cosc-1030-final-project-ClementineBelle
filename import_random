@@ -1,0 +1,74 @@
+import random 
+
+# Parameters
+three_point_pct = 0.35
+two_point_pct = 0.55
+opp_free_throw_pct = 0.70
+off_rebound_prob = 0.20
+overtime_win_prob = 0.50
+TRIALS = 10000
+
+def shoot(prob):
+    return random.random() < prob
+
+def three_point_scenario():
+    if shoot(three_point_pct):
+        win_ot = random.random() < overtime_win_prob
+        return win_ot, 3
+    else:
+        win_ot = random.random() < overtime_win_prob
+        return win_ot, 0
+
+def foul_scenario():
+    points_scored = 0
+
+    # Take 2-pointer
+    if shoot(two_point_pct):
+        points_scored += 2
+
+    # Opponent free throws
+    opp_points = 0
+    if shoot(opp_free_throw_pct):
+        opp_points += 1
+    if shoot(opp_free_throw_pct):
+        opp_points += 1
+
+    # Chance of offensive rebound after your original shot
+    if random.random() < off_rebound_prob:
+        if shoot(two_point_pct):
+            points_scored += 2
+
+    # You began down 3
+    score_diff = 3 - points_scored + opp_points
+
+    if score_diff <= 0:
+        return True, points_scored
+    else:
+        win_ot = random.random() < overtime_win_prob
+        return win_ot, points_scored
+
+def monte_carlo():
+    three_wins = 0
+    foul_wins = 0
+    three_points_total = 0
+    foul_points_total = 0
+
+    for _ in range(TRIALS):
+        win, pts = three_point_scenario()
+        if win:
+            three_wins += 1
+        three_points_total += pts
+
+        win, pts = foul_scenario()
+        if win:
+            foul_wins += 1
+        foul_points_total += pts
+
+    print("Simulation complete.")
+    print("Trials:", TRIALS)
+    print("Win % shooting a 3-pointer:", (three_wins / TRIALS) * 100)
+    print("Win % taking 2 then fouling:", (foul_wins / TRIALS) * 100)
+    print("Average points (3-pointer strategy):", three_points_total / TRIALS)
+    print("Average points (foul strategy):", foul_points_total / TRIALS)
+
+monte_carlo()
